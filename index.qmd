@@ -1,0 +1,25 @@
+---
+title: "Introduction to YAML Headers"
+author: "Gabriel Brock"
+date: "2024-11-25"
+categories:
+  - FIC
+  - Elections
+---
+
+```{r import libraries}
+
+library(tidyverse)
+
+```
+
+```{r import data}
+
+nmCons20241125 <- read_csv("data/nm-contributions-20241125.csv", 
+    col_types = cols(OrgID = col_number(), 
+        `Transaction Date` = col_datetime(format = "%m/%d/%Y %H:%M:%S AM"), 
+        Suffix = col_character(), `Contributor Zip Code` = col_number(), 
+        `Transaction ID` = col_double(), 
+        `Filed Date` = col_character(), `End of Period` = col_datetime(format = "%m/%d/%Y %H:%M A<"), 
+        `Occupation Comment` = col_character()))
+```
