@@ -1,0 +1,43 @@
+# Data Download File Key
+
+## Contributions and Loans Received Layout
+
+-   The Contributions and Loans file contains contributions, both monetary and in-kind, and loans received for both the primary and general elections filed in a specific year.
+
+| Position | Field | Description |
+|----|----|----|
+| A | Org Id | This is the unique id of the reporting entity. |
+| B | Transaction Amount | Amount of the Contribution or Loan Received. |
+| C | Transaction Date | Transaction Date. |
+| D | Last Name | Last Name of the Contributor or Lender, if an individual person. If not an individual, the entity full name will be in the last name field. |
+| E | First Name | First Name of the Contributor or Lender. |
+| F | Middle Name | Middle Name of the Contributor or Lender. |
+| G | Prefix | Prefix of the Contributor or Lender. |
+| H | Suffix | Contributor or Lender Suffix. |
+| I | Contributor Address Line 1 | Address of the Contributor or Lender (or of the Location in the case of a Special Event). |
+| J | Contributor Address Line 2 | Address Line 2 of Contributor or Lender (or of the Location in the case of a Special Event). |
+| K | Contributor City | City of the Contributor or Lender (or of the Location in the case of a Special Event). |
+| L | Contributor State | State of the Contributor or Lender (or of the Location in the case of a Special Event). |
+| M | Contributor Zip Code | Zip Code of the Contributor or Lender (or of the Location in the case of a Special Event). |
+| N | Description | Description of the Transaction. |
+| O | Check Number | Check Number listed with Transaction. |
+| P | Transaction ID | This is the Transaction Internal ID. This ID is unique. |
+| Q | Filed Date | This is the Date the Transaction was Filed on the Report. |
+| R | Election | This is the Election Description of the election that the transaction was applied to. |
+| S | Report Name | This is the name of the report it was filed on. |
+| T | Start of Period | This is the date that the reporting period starts. |
+| U | End of Period | This is the date that the reporting period ends on. |
+| V | Contributor Code | Type of Contributor/Lender (Self, Individual, Political Committee, Other, Lobbying Organization). |
+| W | Contribution Type | This is the type of Contribution: Monetary, In-Kind, Anonymous. Will be blank for Loans Received. If a special event created this Contribution, Type should display Special Event. |
+| X | Reporting Entity Type | Candidate / PAC – Subtype. |
+| Y | Committee Name | This is the name of the recipient PAC. |
+| Z | Candidate Last Name | Last Name of the Candidate. |
+| AA | Candidate First Name | First Name of the Candidate. |
+| BB | Candidate Middle Name | Middle Name of the Candidate. |
+| CC | Candidate Prefix | Prefix of the Candidate. |
+| DD | Candidate Suffix | Suffix of the Candidate. |
+| EE | Amended | Y/N indicator to show if an amendment was filed for this record. |
+| FF | Contributor Employer | Employer of the Contributor, if the contributor is an individual. Employer displays in cases where this information is provided. |
+| GG | Contributor Occupation | Occupation of the Contributor, if the contributor is an individual. If the contributor is an organization, displays the business type. |
+| HH | Occupation Comment | This is the receipt source’s occupation description if ‘Other’ is chosen for the occupation. |
+| II | Employment Information Requested | Y/N indicator to show if employment information was requested. |
