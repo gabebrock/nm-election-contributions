@@ -11,12 +11,23 @@ categories:
 
 library(tidyverse)
 library(knitr)
+library(kableExtra)
+
+options(scipen=999)
 
 ```
 
 ```{r import data}
 
-nmCons20241125 <- read_csv("data/nm-contributions-2024-20241125.csv", 
+nmCons2024 <- read_csv("data/nm-contributions-2024-20241125.csv", 
+    col_types = cols(OrgID = col_number(), 
+        `Transaction Date` = col_datetime(format = "%m/%d/%Y %H:%M:%S AM"), 
+        Suffix = col_character(), `Contributor Zip Code` = col_number(), 
+        `Transaction ID` = col_double(), 
+        `Filed Date` = col_character(), `End of Period` = col_datetime(format = "%m/%d/%Y %H:%M A<"), 
+        `Occupation Comment` = col_character()))
+
+nmCons2020 <- read_csv("data/nm-contributions-2020-20241206.csv", 
     col_types = cols(OrgID = col_number(), 
         `Transaction Date` = col_datetime(format = "%m/%d/%Y %H:%M:%S AM"), 
         Suffix = col_character(), `Contributor Zip Code` = col_number(), 
@@ -25,144 +36,106 @@ nmCons20241125 <- read_csv("data/nm-contributions-2024-20241125.csv",
         `Occupation Comment` = col_character()))
 ```
 
-```{r spending summaries}
+```{r 2024 spending summaries}
 
-spent_by_contributor <- nmCons20241125 %>%
+G24_spent_by_contributor <- nmCons2024 %>%
   group_by(`Contributor Code`) %>%
   summarize(TotalAmount = sum(`Transaction Amount`, na.rm = TRUE))
-spent_by_contributor
+G24_spent_by_contributor
 
-spent_by_contributor_by_election <- nmCons20241125 %>%
-  group_by(`Contributor Code`, `Election`) %>%
+#
+G24_spent_by_contributor <- nmCons2024 %>%
+  filter(Election == "General") %>%
+  group_by(`Contributor Code`) %>%
   summarize(TotalAmount = sum(`Transaction Amount`, na.rm = TRUE))
-spent_by_contributor_by_election
+G24_spent_by_contributor
 
-top_spenders <- nmCons20241125 %>%
-  group_by(`Contributor Code`) %>%                       
-  arrange(`Contributor Code`, desc(`Transaction Amount`)) %>% 
-  slice_head(n = 5) 
-top_spenders
 
-top_spenders_by_election <- nmCons20241125 %>%
-  group_by(`Contributor Code`, `Election`) %>%
-  arrange(`Contributor Code`, desc(`Transaction Amount`)) %>% 
-  slice_head(n = 5) 
-top_spenders_by_election
-
-top_individual_contributors <- nmCons20241125 %>%
-  filter(`Contributor Code` == "Individual") %>%         
+# General Election Indivdidual Contributors
+G24_top10_individual_contributors <- nmCons2024 %>%
+  filter(`Contributor Code` == "Individual", Election == "General") %>%         
   group_by(`First Name`, `Last Name`) %>%                                     
   summarize(TotalAmount = sum(`Transaction Amount`, na.rm = TRUE)) %>%
   arrange(desc(TotalAmount)) %>%
   head(10)
-top_individual_contributors
+G24_top10_individual_contributors
 
-top_pac_contributors <- nmCons20241125 %>%
-  filter(`Contributor Code` == "Political Committee") %>%         
+# top political action committee contributors
+G24_top_pac_contributors <- nmCons2024 %>%
+  filter(`Contributor Code` == "Political Committee", Election == "General") %>%         
   group_by(`Last Name`) %>%                                     
   summarize(TotalAmount = sum(`Transaction Amount`, na.rm = TRUE)) %>%
-  arrange(desc(TotalAmount)) %>%
-  head(10)
-top_pac_contributors
+  arrange(desc(TotalAmount)) %>% 
+  head(50)
+G24_top_pac_contributors %>%
+  write.csv(file = "data/gen-data/G24_top_pac_contributors.csv")
 
-top_lobby_contributors <- nmCons20241125 %>%
-  filter(`Contributor Code` == "Lobbying Organization") %>%         
+G24_top_lobby_contributors <- nmCons2024 %>%
+  filter(`Contributor Code` == "Lobbying Organization", Election == "General") %>%         
   group_by(`Last Name`) %>%                                     
   summarize(TotalAmount = sum(`Transaction Amount`, na.rm = TRUE)) %>%
-  arrange(desc(TotalAmount)) %>%
-  head(10)
-top_lobby_contributors
+  arrange(desc(TotalAmount))
+G24_top_lobby_contributors %>%
+  write.csv(file = "data/gen-data/G24_top_lobby_contributors.csv")
 
-top_business_contributors <- nmCons20241125 %>%
-  filter(`Contributor Code` == "Other (e.g. business entity)") %>%         
-  group_by(`Last Name`) %>%                                     
-  summarize(TotalAmount = sum(`Transaction Amount`, na.rm = TRUE)) %>%
-  arrange(desc(TotalAmount)) %>%
-  head(40)
-top_business_contributors
-
-top_contributor_employers <- nmCons20241125  %>%
+G24_top_contributor_employers <- nmCons2024  %>%
   group_by(`Contributor Employer`, na.rm = FALSE) %>%                                     
   summarize(TotalAmount = sum(`Transaction Amount`, na.rm = TRUE)) %>%
   arrange(desc(TotalAmount)) %>%
-  head(25)
-top_contributor_employers
+  head(15) 
+G24_top_lobby_contributors %>%
+  write.csv(file = "data/gen-data/G24_top_contributors_employers.csv")
 
-conoco_contributions <- nmCons20241125 %>%
+```
+
+```{r}
+
+# top business contributors during 2024 general election
+G24_top_business_contributors <- nmCons2024 %>%
+  filter(`Contributor Code` == "Other (e.g. business entity)", Election == "General", `Transaction Amount` >= 500) %>%         
+  group_by(`Last Name`) %>%                                     
+  summarize(TotalAmount = sum(`Transaction Amount`, na.rm = TRUE)) %>%
+  arrange(desc(TotalAmount)) 
+
+G24_top_business_contributors %>%
+  write_excel_csv2(file = "data/gen-data/G24_top_business_contributors.csv") # write df to csv file
+
+# top_business_contributions (pre-mismatch-aggregation)
+G24_top_business_sum <- read_csv("data/gen-data/nm2024aggs.csv") %>% 
+  select(-SumAmount) # remove manual summation from excel
+
+# data set with NYSE holding info
+nyseHoldings <- read_csv("data/gen-data/nyseHoldings.csv") # had to hand tidy data because of the name mismatch
+
+
+```
+
+```{r candidates with foriegn contributions}
+
+# dataset of all candidates who received contributions from foreign-owned or Oil & Gas companies
+G24_business_recipients <- nmCons2024  %>%
+  filter(Election == "General", `Last Name` %in% G24_top_business_contributors$`Last Name`) %>%
+  group_by(`Candidate Last Name`, `Candidate First Name`) %>%
+  arrange(`Candidate Last Name`) %>%
+  select(OrgID, `Transaction ID`, `Transaction Amount`, `Transaction Date`, `Last Name`, Description, `Committee Name`, `Candidate Last Name`, `Candidate First Name`)
+
+```
+
+
+
+```{r}
+conoco_contributions <- nmCons2024 %>%
   filter(str_detect(`Last Name`, "Conoco"))
 conoco_contributions
 
 conoco_contributions_sum <- conoco_contributions %>%
   summarize(TotalAmount = sum(`Transaction Amount`, na.rm = TRUE))
 conoco_contributions_sum
-
 ```
 
-
-```{r spending summary visualizations}
-
-ggplot(spent_by_contributor_by_election, aes(x = `Contributor Code`, y = TotalAmount, fill = Election)) +
-  geom_bar(stat = "identity") + 
-  labs(
-    title = "Total Amount Spent by Contributor Code",
-    x = "Contributor Code",
-    y = "Total Amount Spent"
-  ) +
-  theme_minimal() + 
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1)
-  )
-
-ggplot(top_spenders_by_election, aes(x = `Election`, y = `Transaction Amount`, fill = `Contributor Code`)) +
-  geom_bar(stat = "identity") +
-  labs(
-    title = "Top Contributors by Election",
-    x = "Election",
-    y = "Transaction Amount",
-    fill = "Contributor Code"
-  ) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-ggplot(top_individual_contributors, aes(x = reorder(paste(`First Name`, `Last Name`), -TotalAmount), y = TotalAmount)) +
-  geom_bar(stat = "identity") +
-  labs(
-    title = "Top 10 Individual Contributors",
-    x = "Contributor Name",
-    y = "Total Amount Spent"
-  ) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-ggplot(top_pac_contributors, aes(x = reorder(str_trunc(`Last Name`, 20), -TotalAmount), y = TotalAmount)) +
-  geom_bar(stat = "identity") +
-  labs(
-    title = "Top 10 PAC Contributors",
-    x = "Contributor Name",
-    y = "Total Amount Spent"
-  ) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-ggplot(top_lobby_contributors, aes(x = reorder(str_trunc(`Last Name`, 20), -TotalAmount), y = TotalAmount)) +
-  geom_bar(stat = "identity") +
-  labs(
-    title = "Top 10 Lobby Contributors",
-    x = "Contributor Name",
-    y = "Total Amount Spent"
-  ) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-```
 
 ```{r}
 
 
-
 ```
-
-
- look at what the top 20-24 businesses that are spending money on election
- look at 
 
